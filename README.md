@@ -15,4 +15,10 @@
    > Vital Signs (Map, HR, SpO₂, RR, Glucose 등): 정상 및 이탈 표기
 
 ## 진행 기록
-### DAY1
+### DAY 1
+- GitHub Repo 생성
+- README.md 초안 작성
+- 프로젝트 기본 구조 설계 시작 및 추가 정보 학습
+
+### DAY 2
+-
