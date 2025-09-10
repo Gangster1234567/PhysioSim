@@ -34,3 +34,15 @@
 - 로그인/회원가입 기능 추가 (백엔드 로직)
 - 비밀번호 로직 추가
 - 구조 재정립: 계정 설정의 이유 (사용자의 계정 - 여러 캐릭터 - 캐릭터의 바이탈)
+
+## 메모
+1. DB 스키마
+   
+users(id, username UNIQUE, email UNIQUE, password_hash, created_at)
+
+characters(id, user_id FK→users ON DELETE CASCADE, name, sex, height_cm, weight_kg, created_at)
+
+vitals(id, character_id FK→characters ON DELETE CASCADE, hr/map/rr/spo2/glucose/temp, recorded_at)
+
+
+2. - DB 부트스트랩 통일: `Database.open()` → `Database.setup()`로 PRAGMA + 스키마 생성
