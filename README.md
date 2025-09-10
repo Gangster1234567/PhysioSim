@@ -8,6 +8,9 @@
 
 *참고: eclipse + jdk17 + sqlite 활용
 
+<img width="736" height="772" alt="image" src="https://github.com/user-attachments/assets/5f3d2d78-ab1e-485a-a09d-54da3ca725e5" />
+
+
 ## 주요 기능
 1. 사용자 입력(성별, 키, 체중)
    > DB에 저장해 캐릭터 파라미터 초기화
