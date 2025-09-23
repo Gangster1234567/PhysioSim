@@ -80,7 +80,7 @@ public class UserRepository {
     // 단건 조회(id)
     public Optional<User> findById(int id) throws SQLException {
         final String sql = """
-            SELECT id, username, email, password_hash, created_at
+            SELECT id, username, email, password_hash, role, clinician_no, created_at
               FROM users
              WHERE id = ?
         """;
@@ -95,7 +95,7 @@ public class UserRepository {
     // 단건 조회(username)
     public Optional<User> findByUsername(String username) throws SQLException {
         final String sql = """
-            SELECT id, username, email, password_hash, created_at
+            SELECT id, username, email, password_hash, role, clinician_no, created_at
               FROM users
              WHERE username = ?
         """;
@@ -110,7 +110,7 @@ public class UserRepository {
     // 전체 목록
     public List<User> listAll() throws SQLException {
         final String sql = """
-            SELECT id, username, email, password_hash, created_at
+            SELECT id, username, email, password_hash, role, clinician_no, created_at
               FROM users
              ORDER BY created_at DESC, id DESC
         """;
@@ -121,7 +121,6 @@ public class UserRepository {
         }
         return out;
     }
-
     // 계정 삭제
     public boolean delete(int id) throws SQLException {
         final String sql = "DELETE FROM users WHERE id = ?";
