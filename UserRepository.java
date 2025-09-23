@@ -13,20 +13,33 @@ public class UserRepository {
     }
 
     // 회원가입: (UNIQUE 위반 시 SQLException 터짐)
-    public int register(String username, String email, String plainPassword) throws SQLException {
-        if (username == null || email == null || plainPassword == null) throw new IllegalArgumentException("null");
-        username = username.trim();
-        email = email.trim();
-        if (username.isEmpty() || email.isEmpty() || plainPassword.isEmpty()) throw new IllegalArgumentException("blank");
-
-        final String sql = "INSERT INTO users(username, email, password_hash) VALUES (?,?,?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, username);
-            ps.setString(2, email);
-            ps.setString(3, Passwords.hash(plainPassword));
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) { return rs.next() ? rs.getInt(1) : -1; }
-        }
+    public int register(String username, String email, String plainPassword,
+            			String role, String clinicianNo) throws SQLException {
+    		if (username == null || email == null || plainPassword == null) 
+    			throw new IllegalArgumentException("null");
+			username = username.trim();
+			email = email.trim();
+			if (username.isEmpty() || email.isEmpty() || plainPassword.isEmpty())
+				throw new IllegalArgumentException("blank");
+			
+			if (role == null || role.isBlank()) role = "CLINICIAN"; // 기본값
+			if (clinicianNo != null) clinicianNo = clinicianNo.trim();
+			
+			final String sql = """
+				INSERT INTO users(username, email, password_hash, role, clinician_no)
+				VALUES (?,?,?,?,?)
+			""";
+			try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+				ps.setString(1, username);
+				ps.setString(2, email);
+				ps.setString(3, Passwords.hash(plainPassword));
+				ps.setString(4, role);
+				ps.setString(5, clinicianNo); // null 허용
+				ps.executeUpdate();
+			try (ResultSet rs = ps.getGeneratedKeys()) { 
+			    return rs.next() ? rs.getInt(1) : -1; 
+			}
+		}
     }
 
     // 로그인: 성공 시 user_id 반환, 실패 시 -1
@@ -34,17 +47,19 @@ public class UserRepository {
         if (username == null || plainPassword == null) return -1;
         username = username.trim();
         if (username.isEmpty() || plainPassword.isEmpty()) return -1;
+
         final String sql = "SELECT id, password_hash FROM users WHERE username = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return -1;
-                return Passwords.verify(plainPassword, rs.getString("password_hash")) ? rs.getInt("id") : -1;
+                return Passwords.verify(plainPassword, rs.getString("password_hash"))
+                        ? rs.getInt("id") : -1;
             }
         }
     }
 
-    // username == ID 중복 여부
+    // username 중복 여부
     public boolean existsByUsername(String username) throws SQLException {
         final String sql = "SELECT 1 FROM users WHERE username = ? LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -116,13 +131,15 @@ public class UserRepository {
         }
     }
 
-    
+    // 매핑
     private static User mapRow(ResultSet rs) throws SQLException {
         return new User(
-                rs.getInt("id"),
+        		rs.getInt("id"),
                 rs.getString("username"),
                 rs.getString("email"),
                 rs.getString("password_hash"),
+                rs.getString("role"),
+                rs.getString("clinician_no"),
                 rs.getString("created_at")
         );
     }
@@ -133,23 +150,36 @@ public class UserRepository {
         private final String username;
         private final String email;
         private final String passwordHash;
+        private final String role;
+        private final String clinicianNo;
         private final String createdAt;
 
-        public User(int id, String username, String email, String passwordHash, String createdAt) {
+        public User(int id, String username, String email, String passwordHash,
+                    String role, String clinicianNo, String createdAt) {
             this.id = id;
             this.username = username;
             this.email = email;
             this.passwordHash = passwordHash;
+            this.role = role;
+            this.clinicianNo = clinicianNo;
             this.createdAt = createdAt;
         }
+
         public int getId() { return id; }
         public String getUsername() { return username; }
         public String getEmail() { return email; }
         public String getPasswordHash() { return passwordHash; }
+        public String getRole() { return role; }
+        public String getClinicianNo() { return clinicianNo; }
         public String getCreatedAt() { return createdAt; }
 
         @Override public String toString() {
-            return "User{id=" + id + ", username='" + username + "', email='" + email + "', createdAt='" + createdAt + "'}";
+            return "User{id=" + id +
+                    ", username='" + username + '\'' +
+                    ", email='" + email + '\'' +
+                    ", role='" + role + '\'' +
+                    ", clinicianNo='" + clinicianNo + '\'' +
+                    ", createdAt='" + createdAt + "'}";
         }
     }
 }
