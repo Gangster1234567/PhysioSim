@@ -39,10 +39,11 @@ public class VitalRepository {
     // 특정 캐릭터의 최신 기록 (하나)
     public VitalRow findLatestByCharacter(int characterId) throws SQLException {
         final String sql = """
-            SELECT * FROM vitals
-            WHERE character_id = ?
-            ORDER BY recorded_at DESC, id DESC
-            LIMIT 1
+            SELECT id, character_id, hr, sbp, dbp, map, rr, spo2, glucose, temp, recorded_at
+              FROM vitals
+             WHERE character_id = ?
+             ORDER BY recorded_at DESC, id DESC
+             LIMIT 1
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, characterId);
@@ -54,7 +55,12 @@ public class VitalRepository {
 
     // 특정 캐릭터의 모든 기록
     public List<VitalRow> findByCharacter(int characterId) throws SQLException {
-        final String sql = "SELECT * FROM vitals WHERE character_id = ? ORDER BY recorded_at";
+        final String sql = """
+            SELECT id, character_id, hr, sbp, dbp, map, rr, spo2, glucose, temp, recorded_at
+              FROM vitals
+             WHERE character_id = ?
+             ORDER BY recorded_at
+        """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, characterId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -68,10 +74,11 @@ public class VitalRepository {
     // 특정 캐릭터의 기록을 기간으로 조회
     public List<VitalRow> findByCharacterBetween(int characterId, String from, String to) throws SQLException {
         final String sql = """
-            SELECT * FROM vitals
-            WHERE character_id = ?
-              AND recorded_at BETWEEN ? AND ?
-            ORDER BY recorded_at
+            SELECT id, character_id, hr, sbp, dbp, map, rr, spo2, glucose, temp, recorded_at
+              FROM vitals
+             WHERE character_id = ?
+               AND recorded_at BETWEEN ? AND ?
+             ORDER BY recorded_at
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, characterId);
