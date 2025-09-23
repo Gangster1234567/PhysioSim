@@ -78,8 +78,8 @@ public class Database {
         	st.execute("""
                     CREATE TABLE IF NOT EXISTS users (
                       id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                      username      TEXT    NOT NULL UNIQUE,
-                      email         TEXT    NOT NULL UNIQUE,
+                      username      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+                      email         TEXT    NOT NULL UNIQUE COLLATE NOCASE,
                       password_hash TEXT    NOT NULL,
                       role          TEXT    DEFAULT 'CLINICIAN'
                                    CHECK(role IN ('CLINICIAN','ADMIN','RESEARCHER','PATIENT')),
@@ -100,7 +100,7 @@ public class Database {
                   id          INTEGER PRIMARY KEY AUTOINCREMENT,
                   mrn         TEXT,           -- 병원 환자번호(있으면 UNIQUE 변경)
                   name        TEXT,           -- 항시 본명 X
-                  birth_date  TEXT,           
+                  birth_date  TEXT,           -- ISO8601 형식 'YYYY-MM-DD' 권장
                   sex         TEXT CHECK(sex IN ('M','F')),
                   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -146,7 +146,7 @@ public class Database {
                   weight_kg           REAL,
                   created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                   FOREIGN KEY(patient_id)         REFERENCES patients(id) ON DELETE CASCADE,
-                  FOREIGN KEY(created_by_user_id) REFERENCES users(id)    ON DELETE SET NULL
+                  FOREIGN KEY(created_by_user_id) REFERENCES users(id)    ON DELETE CASCADE
                 )
             """);
             // 같은 환자 내 캐릭터명 중복 방지 → 조회/관리 편의성
@@ -163,6 +163,8 @@ public class Database {
                   id            INTEGER PRIMARY KEY AUTOINCREMENT,
                   character_id  INTEGER NOT NULL,
                   hr        INTEGER,   -- bpm
+                  sbp       REAL,      -- Systolic BP, mmHg
+                  dbp       REAL,      -- Diastolic BP, mmHg
                   map       REAL,      -- mmHg
                   rr        INTEGER,   -- breaths/min
                   spo2      REAL,      -- %
@@ -176,9 +178,17 @@ public class Database {
                   CHECK (temp    IS NULL OR temp BETWEEN 25.0 AND 45.0)
                 )
             """);
+            
             // 시계열 조회 최적화
             st.execute("CREATE INDEX IF NOT EXISTS idx_vitals_char ON vitals(character_id)");
             st.execute("CREATE INDEX IF NOT EXISTS idx_vitals_time ON vitals(recorded_at)");
+            
+            st.execute("""
+                   CREATE TABLE IF NOT EXISTS schema_version(
+            			version INTEGER NOT NULL,
+            			applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            		)
+                """);
 
             conn.commit();
         } catch (SQLException e) {
