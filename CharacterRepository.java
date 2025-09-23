@@ -39,7 +39,11 @@ public class CharacterRepository {
 
     // 캐릭터 조회 (하나)
     public CharacterRow findById(int id) throws SQLException {
-        final String sql = "SELECT * FROM characters WHERE id = ?";
+        final String sql = """
+            SELECT id, patient_id, created_by_user_id, name, sex, height_cm, weight_kg, created_at
+              FROM characters
+             WHERE id = ?
+        """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -47,10 +51,14 @@ public class CharacterRepository {
             }
         }
     }
-
     // 특정 환자의 모든 캐릭터: 특이 케이스
     public List<CharacterRow> findByPatient(int patientId) throws SQLException {
-        final String sql = "SELECT * FROM characters WHERE patient_id = ? ORDER BY created_at";
+        final String sql = """
+            SELECT id, patient_id, created_by_user_id, name, sex, height_cm, weight_kg, created_at
+              FROM characters
+             WHERE patient_id = ?
+             ORDER BY created_at
+        """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, patientId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -80,21 +88,21 @@ public class CharacterRepository {
                 rs.getInt("created_by_user_id"),
                 rs.getString("name"),
                 rs.getString("sex"),
-                rs.getDouble("height_cm"),
-                rs.getDouble("weight_kg"),
+                rs.getObject("height_cm", Double.class), 
+                rs.getObject("weight_kg", Double.class),
                 rs.getString("created_at")
         );
     }
 
     // DTO
     public static record CharacterRow(
-            int id,
+    		int id,
             int patientId,
             int createdByUserId,
             String name,
             String sex,
-            double heightCm,
-            double weightKg,
+            Double heightCm,
+            Double weightKg,
             String createdAt
     ) {}
 }
