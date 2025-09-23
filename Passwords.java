@@ -62,12 +62,15 @@ public final class Passwords {
 
     // 파생키
     private static byte[] derive(char[] pw, byte[] salt, int iter, int bits) {
+        PBEKeySpec spec = new PBEKeySpec(pw, salt, iter, bits);
         try {
-            PBEKeySpec spec = new PBEKeySpec(pw, salt, iter, bits);
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             return skf.generateSecret(spec).getEncoded();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            // 메모리 상에 남은 pw 삭제
+            spec.clearPassword();
         }
     }
 
