@@ -91,7 +91,8 @@ public class Database {
         	// 1-1) 의료인만 clinician_no 유일
             st.execute("""
                 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_clinician_no
-                ON users(clinician_no) WHERE role='CLINICIAN'
+                ON users(clinician_no)
+                WHERE role='CLINICIAN' AND clinician_no IS NOT NULL
             """);
 
             // 2) patients : 환자 PHI(식별자) 분리
@@ -105,6 +106,8 @@ public class Database {
                   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """);
+            
+         // st.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_patients_mrn ON patients(mrn) WHERE mrn IS NOT NULL");
             
             // 3) care_assignments : 의료인 ↔ 환자 접근권한(다대다 매핑)
             st.execute("""
@@ -148,7 +151,7 @@ public class Database {
                   FOREIGN KEY(patient_id)         REFERENCES patients(id) ON DELETE CASCADE,
                   FOREIGN KEY(created_by_user_id) REFERENCES users(id)    ON DELETE CASCADE
                 )
-            """);
+            """); // > 발전 시 삭제 로그 감안
             // 같은 환자 내 캐릭터명 중복 방지 → 조회/관리 편의성
             st.execute("""
                 CREATE UNIQUE INDEX IF NOT EXISTS ux_char_patient_name
